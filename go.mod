@@ -1,6 +1,6 @@
 module github.com/ep4sh/yadsharez
 
-go 1.23.1
+go 1.23
 
 require github.com/fatih/color v1.17.0
 
