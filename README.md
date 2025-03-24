@@ -12,6 +12,11 @@ go build -o ./yadsharez ./cmd/yadsharez/main.go
 ./yadsharez [FULL_FILE_PATH]
 ```
 
+Another option via `go install`:
+```
+go install github.com/ep4sh/yadsharez/cmd/yadsharez@latest
+```
+
 Please feel free to contibute :>
 
 
