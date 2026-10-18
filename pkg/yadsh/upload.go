@@ -13,13 +13,13 @@ import (
 )
 
 const (
-	tokenEnv         = "OAUTH_TOKEN"
-	tokenNotFoundErr = "OAUTH_TOKEN env missing"
+	tokenEnv         = "YANDEX_OAUTH_TOKEN"
+	tokenNotFoundErr = "YANDEX_OAUTH_TOKEN env missing"
 )
 
 // OAuthResp represents correct response on OAuth request.
 type OAuthResp struct {
-	OperationID string `json:"operation_id,omit_empty"`
+	OperationID string `json:"operation_id,omitempty"`
 	Href        string `json:"href"`
 	Method      string `json:"method"`
 	Templated   bool   `json:"templated"`
@@ -27,38 +27,39 @@ type OAuthResp struct {
 
 // Upload request temporary URL for uploads
 // and upload the file.
-func Upload(filePath, token string) {
+func Upload(filePath, token string) error {
 	uploadHref, err := getUploadHref(filePath, token)
 	if err != nil {
-		log.Fatalf("error creating uploading URL: %v\n", err)
+		return err
 	}
 
-	log.Printf("Upload href: %v\n", uploadHref)
+	err = uploadYandexDisk(filePath, uploadHref)
+	if err != nil {
+		return err
+	}
 
-	uploadYandexDisk(filePath, uploadHref)
+	return nil
 }
 
 // getUploadHref return URL for direct file download.
 func getUploadHref(filePath, token string) (string, error) {
 	url := getUploadURL(filePath)
-	client := http.Client{}
+	client := http.Client{Timeout: clientTimeOut}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		log.Printf("error creating http get request %v\n", err)
 		return "", err
 	}
 	req.Header.Set("Authorization", AuthHeader(token))
 
 	res, err := client.Do(req)
 	if err != nil {
-		log.Printf("error doing http get request %v\n", err)
 		return "", err
 	}
 	defer res.Body.Close()
 
 	uploadHref, err := getHref(res)
 	if err != nil {
-		log.Printf("error decoding http get request %v\n", err)
+		return "", err
 	}
 	return uploadHref, nil
 }
@@ -67,8 +68,9 @@ func getUploadHref(filePath, token string) (string, error) {
 func uploadYandexDisk(filePath, href string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Printf("error opening file %v", err)
+		return err
 	}
+
 	defer file.Close()
 
 	body := &bytes.Buffer{}
@@ -76,24 +78,37 @@ func uploadYandexDisk(filePath, href string) error {
 	fieldName := "file"
 	part, err := writer.CreateFormFile(fieldName, filepath.Base(filePath))
 	if err != nil {
-		log.Printf("error creating multipart form for file %s: %v", file.Name(), err)
+		return err
 	}
 
 	_, err = io.Copy(part, file)
-	err = writer.Close()
 	if err != nil {
-		log.Printf("error closing multipart form: %v", err)
+		return err
 	}
 
-	log.Printf("Creting PUT request to upload to YaDisk\n")
+	err = writer.Close()
+	if err != nil {
+		return err
+	}
+
 	req, err := http.NewRequest(http.MethodPut, href, body)
+	if err != nil {
+		return err
+	}
+
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-	client := http.Client{}
+
+	client := http.Client{Timeout: clientTimeOut}
 	res, err := client.Do(req)
 	if err != nil {
-		log.Printf("error uploading file: %v", err)
+		return err
 	}
+
 	defer res.Body.Close()
+
+	if res.StatusCode > 299 {
+		return fmt.Errorf("got %v status", res.Status)
+	}
 
 	return nil
 }
@@ -110,6 +125,7 @@ func GetOAuthToken() (string, error) {
 	if !ok {
 		return "", fmt.Errorf(tokenNotFoundErr)
 	}
+
 	return val, nil
 }
 
@@ -127,10 +143,14 @@ func getHref(res *http.Response) (string, error) {
 		return "", err
 	}
 
+	if oauth.Href == "" {
+		return "", fmt.Errorf("href is empty, yandex api is broken: %v", res.Body)
+	}
+
 	return oauth.Href, nil
 }
 
 // Help prints out the app usage.
 func Help() {
-	log.Fatalf("Usage: yadsharez [file]\n")
+	log.Println("Usage: yadsharez [file]")
 }

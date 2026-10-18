@@ -11,6 +11,7 @@ func main() {
 	args := os.Args[:]
 	if len(args) < 2 || len(args) > 3 {
 		yadsh.Help()
+		return
 	}
 
 	filePath := os.Args[1]
@@ -18,9 +19,15 @@ func main() {
 
 	token, err := yadsh.GetOAuthToken()
 	if err != nil {
-		log.Fatalf("Export env OAUTH_TOKEN\n")
+		log.Fatalf("%v\n", err)
 	}
 
-	yadsh.Upload(filePath, token)
-	yadsh.Download(filePath, token)
+	err = yadsh.Upload(filePath, token)
+	if err != nil {
+		log.Fatalf("error on Upload: %v\n", err)
+	}
+	err = yadsh.Download(filePath, token)
+	if err != nil {
+		log.Fatalf("error on Download: %v\n", err)
+	}
 }

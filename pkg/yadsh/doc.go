@@ -1,3 +1,2 @@
+// Package yadsh implemets API for uploading and downloading for the Yandex Disk REST API
 package yadsh
-
-// Package implemets API for uploading and downloading to the Yandex Disk REST API

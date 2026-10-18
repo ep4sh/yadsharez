@@ -5,7 +5,7 @@ Yadsh is an implementation of [YandexDisk REST API](https://yandex.ru/dev/disk-a
 
 For usage:
 1) Create OAuth token: https://yandex.ru/dev/disk-api/doc/ru/concepts/quickstart#oauth
-2) Export as env var: `export OAUTH_TOKEN="...."`
+2) Export as env var: `export YANDEX_OAUTH_TOKEN="...."`
 3) Run app / use package:
 ```
 go build -o ./yadsharez ./cmd/yadsharez/main.go
