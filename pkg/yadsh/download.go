@@ -6,13 +6,8 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
-	"time"
 
 	"github.com/fatih/color"
-)
-
-const (
-	clientTimeOut = 30 * time.Second
 )
 
 // Download prints out download link for the particular file stored on the YandexDisk.
@@ -32,7 +27,6 @@ func Download(ctx context.Context, filePath, token string) error {
 // getDownloadHref return URL for direct file download.
 func getDownloadHref(ctx context.Context, filePath, token string) (string, error) {
 	url := getDownloadURL(filePath)
-	client := http.Client{Timeout: clientTimeOut}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err

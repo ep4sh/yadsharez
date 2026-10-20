@@ -45,7 +45,6 @@ func Upload(ctx context.Context, filePath, token string) error {
 // getUploadHref return URL for direct file download.
 func getUploadHref(ctx context.Context, filePath, token string) (string, error) {
 	url := getUploadURL(filePath)
-	client := http.Client{Timeout: clientTimeOut}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
@@ -99,7 +98,6 @@ func uploadYandexDisk(ctx context.Context, filePath, href string) error {
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	client := http.Client{Timeout: clientTimeOut}
 	res, err := client.Do(req)
 	if err != nil {
 		return err
