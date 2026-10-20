@@ -2,6 +2,7 @@ package yadsh
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -27,13 +28,13 @@ type OAuthResp struct {
 
 // Upload request temporary URL for uploads
 // and upload the file.
-func Upload(filePath, token string) error {
-	uploadHref, err := getUploadHref(filePath, token)
+func Upload(ctx context.Context, filePath, token string) error {
+	uploadHref, err := getUploadHref(ctx, filePath, token)
 	if err != nil {
 		return err
 	}
 
-	err = uploadYandexDisk(filePath, uploadHref)
+	err = uploadYandexDisk(ctx, filePath, uploadHref)
 	if err != nil {
 		return err
 	}
@@ -42,10 +43,10 @@ func Upload(filePath, token string) error {
 }
 
 // getUploadHref return URL for direct file download.
-func getUploadHref(filePath, token string) (string, error) {
+func getUploadHref(ctx context.Context, filePath, token string) (string, error) {
 	url := getUploadURL(filePath)
 	client := http.Client{Timeout: clientTimeOut}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
 	}
@@ -65,7 +66,7 @@ func getUploadHref(filePath, token string) (string, error) {
 }
 
 // uploadYandexDisk performs direct file uploading to the Yandex Disk storage.
-func uploadYandexDisk(filePath, href string) error {
+func uploadYandexDisk(ctx context.Context, filePath, href string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -91,7 +92,7 @@ func uploadYandexDisk(filePath, href string) error {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPut, href, body)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, href, body)
 	if err != nil {
 		return err
 	}

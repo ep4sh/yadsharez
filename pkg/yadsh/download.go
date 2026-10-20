@@ -1,6 +1,7 @@
 package yadsh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,8 +16,8 @@ const (
 )
 
 // Download prints out download link for the particular file stored on the YandexDisk.
-func Download(filePath, token string) error {
-	downloadHref, err := getDownloadHref(filePath, token)
+func Download(ctx context.Context, filePath, token string) error {
+	downloadHref, err := getDownloadHref(ctx, filePath, token)
 	if err != nil {
 		return err
 	}
@@ -29,10 +30,10 @@ func Download(filePath, token string) error {
 }
 
 // getDownloadHref return URL for direct file download.
-func getDownloadHref(filePath, token string) (string, error) {
+func getDownloadHref(ctx context.Context, filePath, token string) (string, error) {
 	url := getDownloadURL(filePath)
 	client := http.Client{Timeout: clientTimeOut}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
 	}

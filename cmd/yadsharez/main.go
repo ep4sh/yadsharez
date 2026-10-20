@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -22,11 +23,13 @@ func main() {
 		log.Fatalf("%v\n", err)
 	}
 
-	err = yadsh.Upload(filePath, token)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	err = yadsh.Upload(ctx, filePath, token)
 	if err != nil {
 		log.Fatalf("error on Upload: %v\n", err)
 	}
-	err = yadsh.Download(filePath, token)
+	err = yadsh.Download(ctx, filePath, token)
 	if err != nil {
 		log.Fatalf("error on Download: %v\n", err)
 	}
